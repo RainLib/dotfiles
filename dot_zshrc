@@ -82,6 +82,7 @@ export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 export PATH="$PATH:$GOPATH/bin"
 
 alias v="nvim"
+alias ll="ls -la"
 #eval "$(starship init zsh)"
 export PATH="/Users/hank.zhao/Developer/git-fuzzy/bin:$PATH"
 #export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)

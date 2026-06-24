@@ -1,0 +1,53 @@
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "darwin") -}}
+#!/bin/sh
+set -eu
+
+if [ "${NVCHAD_INSTALL_ON_APPLY:-1}" = "0" ] || [ "${NVCHAD_SYNC_ON_APPLY:-1}" = "0" ]; then
+  echo "Skipping NvChad plugin sync."
+  exit 0
+fi
+
+NVIM_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
+
+if [ ! -f "$NVIM_CONFIG_DIR/init.lua" ]; then
+  echo "$NVIM_CONFIG_DIR/init.lua does not exist; skipping NvChad plugin sync."
+  exit 0
+fi
+
+if ! command -v nvim >/dev/null 2>&1; then
+  echo "nvim is not on PATH; skipping NvChad plugin sync." >&2
+  exit 0
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "git is required to sync NvChad plugins." >&2
+  exit 1
+fi
+
+cleanup_clean_git() {
+  [ -z "${NVCHAD_GIT_WRAPPER_DIR:-}" ] || rm -rf "$NVCHAD_GIT_WRAPPER_DIR"
+  [ -z "${NVCHAD_GIT_HOME:-}" ] || rm -rf "$NVCHAD_GIT_HOME"
+}
+
+trap cleanup_clean_git EXIT
+
+NVCHAD_REAL_GIT="$(command -v git)"
+tmp_base="${TMPDIR:-/tmp}"
+NVCHAD_GIT_HOME="$(mktemp -d "$tmp_base/nvchad-git-home.XXXXXX")"
+NVCHAD_GIT_WRAPPER_DIR="$(mktemp -d "$tmp_base/nvchad-git-bin.XXXXXX")"
+export NVCHAD_REAL_GIT NVCHAD_GIT_HOME
+
+cat > "$NVCHAD_GIT_WRAPPER_DIR/git" <<'EOF'
+#!/bin/sh
+: "${NVCHAD_REAL_GIT:?}"
+: "${NVCHAD_GIT_HOME:?}"
+HOME="$NVCHAD_GIT_HOME" GIT_CONFIG_NOSYSTEM=1 exec "$NVCHAD_REAL_GIT" "$@"
+EOF
+chmod +x "$NVCHAD_GIT_WRAPPER_DIR/git"
+export PATH="$NVCHAD_GIT_WRAPPER_DIR:$PATH"
+
+nvim --headless "+Lazy! sync" +qa || {
+  echo "lazy.nvim sync did not finish." >&2
+  exit 1
+}
+{{ end -}}

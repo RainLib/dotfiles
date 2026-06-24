@@ -1,0 +1,17 @@
+{{- if eq .chezmoi.os "darwin" -}}
+#!/bin/sh
+set -eu
+
+if ! command -v chezmoi >/dev/null 2>&1; then
+  exit 0
+fi
+
+source_dir="$(chezmoi source-path 2>/dev/null || true)"
+if [ -z "$source_dir" ] || [ ! -f "$source_dir/scripts/fix-terminal-fonts.sh" ]; then
+  exit 0
+fi
+
+if ! sh "$source_dir/scripts/fix-terminal-fonts.sh"; then
+  echo "iTerm2 font fix failed; quit iTerm2 completely and rerun: sh $source_dir/scripts/fix-terminal-fonts.sh" >&2
+fi
+{{- end -}}

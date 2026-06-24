@@ -1,0 +1,58 @@
+{{ if eq .chezmoi.os "linux" -}}
+#!/bin/sh
+set -eu
+
+echo "Linux detected. Install git, neovim, ripgrep, fd, tree-sitter-cli, and tmux with your package manager."
+{{ else if eq .chezmoi.os "darwin" -}}
+#!/bin/sh
+set -eu
+
+if ! command -v brew >/dev/null 2>&1; then
+  echo "Homebrew is required. Install it from https://brew.sh, then rerun chezmoi apply." >&2
+  exit 1
+fi
+
+install_or_upgrade_formula() {
+  if brew list "$1" >/dev/null 2>&1; then
+    if brew outdated --quiet "$1" | grep -qx "$1"; then
+      brew upgrade "$1"
+    fi
+  else
+    brew install "$1"
+  fi
+}
+
+install_or_upgrade_cask() {
+  if brew list --cask "$1" >/dev/null 2>&1; then
+    if brew outdated --cask --quiet "$1" | grep -qx "$1"; then
+      brew upgrade --cask "$1"
+    fi
+  else
+    brew install --cask "$1"
+  fi
+}
+
+install_or_upgrade_formula git
+install_or_upgrade_formula zsh
+install_or_upgrade_formula neovim
+install_or_upgrade_formula node
+install_or_upgrade_formula fzf
+install_or_upgrade_formula fd
+install_or_upgrade_formula ripgrep
+install_or_upgrade_formula tree-sitter-cli
+install_or_upgrade_formula tmux
+install_or_upgrade_formula stylua
+
+install_or_upgrade_cask font-jetbrains-mono
+install_or_upgrade_cask font-hack-nerd-font
+install_or_upgrade_cask font-fira-code
+
+if [ -d /Applications/iTerm.app ]; then
+  echo "iTerm2 is already installed at /Applications/iTerm.app; skipping Homebrew cask."
+else
+  install_or_upgrade_cask iterm2
+fi
+
+install_or_upgrade_cask wezterm
+install_or_upgrade_cask kitty
+{{ end -}}
