@@ -1,7 +1,9 @@
 # My Personal dotfiles Managed by chezmoi 🤖
 
-This repo contains all my dotfiles managed by [chezmoi](https://github.com/twpayne/chezmoi), Chezmoi manage dotfile start with `dot_` prefix instead of `.`  for example, the `.zshrc` will be `dot_zshrc` in chezmoi, so if you don't want use chezmoi, just rename the `dot_` config file to real `.` file, you can fork and edit before use it.
+This repo contains all my dotfiles managed by [chezmoi](https://github.com/twpayne/chezmoi), Chezmoi manage dotfile start with `dot_` prefix instead of `.`  for example,
+the `.zshrc` will be `dot_zshrc` in chezmoi, so if you don't want use chezmoi, just rename the `dot_` config file to real `.` file, you can fork and edit before use it.
 
+**PS.** nvim dotfiles were migrated to https://github.com/zhaohongxuan/nvim
 
 ## How to Usage
 1. install [chezmoi](https://github.com/twpayne/chezmoi) first, if you use mac, simply `brew install chezmoi`
@@ -10,69 +12,80 @@ This repo contains all my dotfiles managed by [chezmoi](https://github.com/twpay
 4. use `chezmoi apply -v` to make all dotfiles take effect. if you just want to apply one config file,
    let's take .zshrc for example, just use `chezmoi appy -v .zshrc`
 
-## Neovim configuration
+## wezterm
 
-### Features
-+ Plug management via [vim-plug](https://github.com/junegunn/vim-plug).
-+ Code, snippet, LSP, completion via [coc-nvim](https://github.com/neoclide/coc.nvim).
-+ Git integration via [vim-fugitive](https://github.com/tpope/vim-fugitive).
-+ Better escaping from insert mode via [better-escape.vim](https://github.com/jdhao/better-escape.vim).
-+ Fuzzy File searching via [LeaderF](https://github.com/Yggdroot/LeaderF).
-+ Code commenting via [vim-commentary](https://github.com/tpope/vim-commentary).
-+ Fuzzy code search with [EasyMotion](https://github.com/easymotion/vim-easymotion).
-+ File tree explorer via [coc-explorer](https://github.com/weirongxu/coc-explorer).
-+ Beautiful statusline via [vim-airline](https://github.com/vim-airline/vim-airline).
-+ Beautiful start page via [vim-startify](https://github.com/mhinz/vim-startify).
+I use wezterm as my primary terminal emulator which is super fast, and lua is friendly for configuration.
 
-+ Code formatting via [Neoformat](https://github.com/sbdchd/neoformat).
-+ Smooth scroll experience via [neoscroll](https://github.com/karb94/neoscroll.nvim).
+Screenshot:
 
+<img width="1368" alt="image" src="https://github.com/zhaohongxuan/dotfiles/assets/8613196/595e359d-45ad-4949-926a-d56a19135daa">
 
-### Screenshot
-<img width="1476" alt="image" src="https://user-images.githubusercontent.com/8613196/183276822-d595cb3c-e093-4025-b9ad-2ab762fed0e3.png">
+### key bindings
 
+Mod Key (macOS):
 
-### Pre-requisite
+`SUPER` -> `Command`
+`SUPER_REV` -> `Command + Shift`
+`LEADER` -> `CTRL+a` 
+`OPT` -> `OPT`
 
-There are some dependencies before we use nvim to do efficient editing and development work.
+#### Pane operations 
 
+| Keys               | Action                             |
+| ------------------ | ---------------------------------- |
+| `SUPER` + `\`      | Split Horizontal                   |
+| `SUPER_REV` + `\|` | Split Vertical                     |
+| `SUPER` + `Enter`  | Toggle Pane Zoom                   |
+| `SUPER` + `w`      | Close current Pane without confirm |
+|                    |                                    |
+#### Pane Navigation
 
-#### Python3
-A lot of Nvim plugins are written by Python3 so , we must install python3 first. 
-after installation ,make sure that you can run `python --version` and got `Python3.x`
-`pip install -U pynvim` to install Pynvim
+`Leader` + `any key`  means  stoke `Leader` first and then the arbitrary key.
 
-#### Node
-We need to install node.js from [here](https://nodejs.org/en/download/).
+| Keys           | Action                    |
+| -------------- | ------------------------- |
+| `Leader` +`k`  | Move cursor to Up Pane    |
+| `Leader` +`j`  | Move cursor to Down Pane  |
+| `Leader` +`h`  | Move cursor to Left Pane  |
+| `Leader` +`l`  | Move cursor to Right Pane |
 
-#### Ripgrep
-Ripgrep, aka, rg, is a fast grepping tool available for both Linux, Windows and macOS. It is used by several searching plugins.
-if you use mac brew , simply `brew install ripgrep`
+#### Pane Resize 
 
-#### nvim
-click herer https://neovim.io/ to install nvim, if you use brew in mac ,simply `brew install nvim`
+Use `Leader + p` to active Pane Resize Mode
 
-### Setting Nvim
-
-#### Install Plug manager 
-
-install Neovim Plugin manager[GitHub - junegunn/vim-plug: Minimalist Vim Plugin Manager](https://github.com/junegunn/vim-plug)
-
-```shell
-sh -c 'curl -fLo "${XDG_DATA_HOME:-$HOME/.local/share}"/nvim/site/autoload/plug.vim --create-dirs \
-       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-```
-
-#### install this configuration
-
-use `chezmoi apply -v .config/nvim/init.vim` to take nvim settings work
+| Keys         | Action                          |
+| ------------ | ------------------------------- |
+| `k`          | Adjust current Pane Size: Up    |
+| `j`          | Adjust current Pane Size: Down  |
+| `h`          | Adjust current Pane Size: Left  |
+| `l`          | Adjust current Pane Size: Right |
+| `ESC` or `q` | Quit Pane Resize Mode           |
 
 
-## Ideavimrc
+#### Tab Operation 
+
+| Keys             | Action                          |
+| ---------------- | ------------------------------- |
+| `SUPER` + `[`    | Navigate to Previous Tab (Left) |
+| `SUPER` +`]`     | Navigate to Next Tab (Right)    |
+| `SUPER_REV` +`[` | Move current TAB to previous    |
+| `SUPER_REV` +`]` | Move current TAB to next        |
+
+#### Miscellaneous
+
+| Keys                  | Action                                    |
+| --------------------- | ----------------------------------------- |
+| `SUPER` + `u`         | Show all  url candidates  in current Pane |
+| `SUPER` + `p`         | Active Command Palette like VSCode        |
+| `SUPER_REV` + `Enter` | Active Copy Mode                          |
+| `OPT` + `,`     | Open Wezterm config using nvim in new tab |
+
+## Ideavim
 
 1. if you use chezmoi, simple use `chezmoi apply -v .ideavimrc` to make it effect, or you can just copy this `.ideavimrc` to your home dictory
 2. enable `ideavim plugin` in your Jetbrain IDE like Intellij IDEA or Pycharm etc.
 3. you can watch my tutorial video in bilibili to get more information:[ideavim插件的配置和使用](https://www.bilibili.com/video/BV1p541157Va)
+
 
 ## tmux
 

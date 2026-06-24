@@ -13,16 +13,12 @@ call plug#begin()
 Plug 'vim-airline/vim-airline-themes'
 Plug 'rakr/vim-one'
 Plug 'mhinz/vim-startify'
-Plug 'Shougo/defx.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'tpope/vim-surround'
 Plug 'easymotion/vim-easymotion'
 Plug 'bling/vim-airline'
 Plug 'junegunn/fzf.vim'
 Plug 'preservim/nerdtree'
 Plug 'liuchengxu/space-vim-dark'
-Plug 'tyru/open-browser.vim'
-Plug 'aklt/plantuml-syntax'
-Plug 'weirongxu/plantuml-previewer.vim'
 
 
 call plug#end()
