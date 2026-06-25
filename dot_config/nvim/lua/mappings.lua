@@ -2,17 +2,38 @@ require "nvchad.mappings"
 
 local map = vim.keymap.set
 
-map("n", "<C-h>", "<cmd><C-U>TmuxNavigateLeft<CR>", { desc = "Tmux pane left", silent = true })
-map("n", "<C-j>", "<cmd><C-U>TmuxNavigateDown<CR>", { desc = "Tmux pane down", silent = true })
-map("n", "<C-k>", "<cmd><C-U>TmuxNavigateUp<CR>", { desc = "Tmux pane up", silent = true })
-map("n", "<C-l>", "<cmd><C-U>TmuxNavigateRight<CR>", { desc = "Tmux pane right", silent = true })
-map("n", "<C-\\>", "<cmd><C-U>TmuxNavigatePrevious<CR>", { desc = "Tmux previous pane", silent = true })
+local function tmux_or_window(command, fallback)
+  return function()
+    if vim.fn.exists(":" .. command) == 2 then
+      vim.cmd(command)
+    else
+      vim.cmd("wincmd " .. fallback)
+    end
+  end
+end
 
-map("t", "<C-h>", "<C-\\><C-n><cmd><C-U>TmuxNavigateLeft<CR>", { desc = "Tmux pane left", silent = true })
-map("t", "<C-j>", "<C-\\><C-n><cmd><C-U>TmuxNavigateDown<CR>", { desc = "Tmux pane down", silent = true })
-map("t", "<C-k>", "<C-\\><C-n><cmd><C-U>TmuxNavigateUp<CR>", { desc = "Tmux pane up", silent = true })
-map("t", "<C-l>", "<C-\\><C-n><cmd><C-U>TmuxNavigateRight<CR>", { desc = "Tmux pane right", silent = true })
-map("t", "<C-\\>", "<C-\\><C-n><cmd><C-U>TmuxNavigatePrevious<CR>", { desc = "Tmux previous pane", silent = true })
+local function terminal_tmux_or_window(command, fallback)
+  return function()
+    vim.cmd.stopinsert()
+    if vim.fn.exists(":" .. command) == 2 then
+      vim.cmd(command)
+    else
+      vim.cmd("wincmd " .. fallback)
+    end
+  end
+end
+
+map("n", "<C-h>", tmux_or_window("TmuxNavigateLeft", "h"), { desc = "Tmux/window left", silent = true })
+map("n", "<C-j>", tmux_or_window("TmuxNavigateDown", "j"), { desc = "Tmux/window down", silent = true })
+map("n", "<C-k>", tmux_or_window("TmuxNavigateUp", "k"), { desc = "Tmux/window up", silent = true })
+map("n", "<C-l>", tmux_or_window("TmuxNavigateRight", "l"), { desc = "Tmux/window right", silent = true })
+map("n", "<C-\\>", tmux_or_window("TmuxNavigatePrevious", "p"), { desc = "Tmux/window previous", silent = true })
+
+map("t", "<C-h>", terminal_tmux_or_window("TmuxNavigateLeft", "h"), { desc = "Tmux/window left", silent = true })
+map("t", "<C-j>", terminal_tmux_or_window("TmuxNavigateDown", "j"), { desc = "Tmux/window down", silent = true })
+map("t", "<C-k>", terminal_tmux_or_window("TmuxNavigateUp", "k"), { desc = "Tmux/window up", silent = true })
+map("t", "<C-l>", terminal_tmux_or_window("TmuxNavigateRight", "l"), { desc = "Tmux/window right", silent = true })
+map("t", "<C-\\>", terminal_tmux_or_window("TmuxNavigatePrevious", "p"), { desc = "Tmux/window previous", silent = true })
 
 map("n", ";", ":", { desc = "CMD enter command mode" })
 map("i", "jk", "<Esc>", { desc = "Exit insert mode" })

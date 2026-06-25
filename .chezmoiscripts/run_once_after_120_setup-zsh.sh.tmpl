@@ -1,0 +1,38 @@
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "darwin") -}}
+#!/bin/sh
+set -eu
+
+if [ "${ZSH_PLUGIN_INSTALL_ON_APPLY:-1}" = "0" ]; then
+  echo "Skipping zsh plugin install."
+  exit 0
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "git is required to install zsh plugins." >&2
+  exit 1
+fi
+
+ZSH_DIR="${ZSH:-$HOME/.oh-my-zsh}"
+ZSH_CUSTOM_DIR="${ZSH_CUSTOM:-$ZSH_DIR/custom}"
+
+if [ ! -d "$ZSH_DIR/.git" ]; then
+  git clone --depth=1 https://github.com/ohmyzsh/ohmyzsh.git "$ZSH_DIR"
+fi
+
+mkdir -p "$ZSH_CUSTOM_DIR/plugins"
+
+if [ ! -d "$ZSH_CUSTOM_DIR/plugins/zsh-autosuggestions/.git" ]; then
+  git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions \
+    "$ZSH_CUSTOM_DIR/plugins/zsh-autosuggestions"
+fi
+
+if [ ! -d "$ZSH_CUSTOM_DIR/plugins/fzf-tab/.git" ]; then
+  git clone --depth=1 https://github.com/Aloxaf/fzf-tab \
+    "$ZSH_CUSTOM_DIR/plugins/fzf-tab"
+fi
+
+if [ ! -d "$ZSH_CUSTOM_DIR/plugins/zsh-syntax-highlighting/.git" ]; then
+  git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting \
+    "$ZSH_CUSTOM_DIR/plugins/zsh-syntax-highlighting"
+fi
+{{ end -}}

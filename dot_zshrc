@@ -72,10 +72,18 @@ ZSH_THEME="mgutz"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git z vi-mode fzf-tab zsh-autosuggestions)
+plugins=(git z vi-mode fzf-tab zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
+alias cx='codex -a never --sandbox workspace-write'
+alias cxd='codex --dangerously-bypass-approvals-and-sandbox'
+alias tm='tmux new -A -s main'
+alias gs='git status'
+alias gp='git pull --rebase'
+alias dcup='docker compose up -d'
+alias kpods='kubectl get pods -A'
+alias dev='pnpm dev'
 alias mvi="mvn clean && mvn install -DskipTests=true"
 
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
@@ -93,6 +101,73 @@ export PATH="/opt/homebrew/opt/openjdk@11/bin:$PATH"
 alias gcf='git checkout $( git branch | fzf)'
 alias gcfr='git checkout $(git branch -r | fzf | sed "s/origin\///")'
 alias cm='chezmoi'
+
+# hh - show all loaded aliases in a readable list.
+hh() {
+  emulate -L zsh
+  local name
+  local -a pager
+
+  if (( ${#aliases} == 0 )); then
+    print "No aliases are currently loaded"
+    return 0
+  fi
+
+  if [[ -t 1 ]] && (( $+commands[less] )); then
+    pager=(less -F -R -X)
+  else
+    pager=(cat)
+  fi
+
+  {
+    printf '%-18s %s\n' "Alias" "Command"
+    printf '%-18s %s\n' "-----" "-------"
+    for name in ${(ok)aliases}; do
+      printf '%-18s %s\n' "$name" "$aliases[$name]"
+    done
+  } | "${pager[@]}"
+}
+
+[ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
+
+# Ctrl-x a opens an fzf picker and inserts the selected alias name.
+_dotfiles_insert_alias() {
+  emulate -L zsh
+  local selected alias_name
+
+  if (( ${#aliases} == 0 )); then
+    zle -M "No aliases are currently loaded"
+    return 1
+  fi
+
+  if (( ! $+commands[fzf] )); then
+    zle -M "fzf is required to pick aliases"
+    return 1
+  fi
+
+  selected=$(
+    {
+      local name
+      for name in ${(ok)aliases}; do
+        printf '%s=%s\n' "$name" "$aliases[$name]"
+      done
+    } | fzf --height=40% --reverse --prompt="alias> " --delimiter="=" --with-nth=1,2
+  ) || return 0
+
+  alias_name="${selected%%=*}"
+  [ -n "$alias_name" ] || return 0
+
+  LBUFFER+="$alias_name "
+  zle redisplay
+}
+
+if [[ -o interactive ]]; then
+  zle -N dotfiles-insert-alias _dotfiles_insert_alias
+  bindkey '^Xa' dotfiles-insert-alias
+  for keymap in emacs viins vicmd; do
+    bindkey -M "$keymap" '^Xa' dotfiles-insert-alias 2>/dev/null || true
+  done
+fi
 
 # fd - cd to selected directory
 fd() {
