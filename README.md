@@ -11,8 +11,9 @@ and `dot_config/nvim` becomes `~/.config/nvim`.
 | Area | Status | Notes |
 | --- | --- | --- |
 | chezmoi source management | Ready | `scripts/apply.sh` makes the current checkout the active chezmoi source. |
-| macOS dependency install | Ready | Installs zsh, Neovim, tmux, fzf, ripgrep, fd, Nerd Fonts, iTerm2, WezTerm, Kitty, and related CLI tools. |
+| macOS dependency install | Ready | Installs zsh, Starship, Neovim, tmux, fzf, ripgrep, fd, Nerd Fonts, iTerm2, WezTerm, Kitty, and related CLI tools. |
 | Zsh shell | Ready | Uses Oh My Zsh with `git`, `z`, `vi-mode`, `fzf-tab`, `zsh-autosuggestions`, and `zsh-syntax-highlighting`. |
+| Starship prompt | Ready | Managed through `~/.config/starship.toml` with the gruvbox-rainbow preset. |
 | Zsh alias picker | Ready | Press `Ctrl-x` then `a` to pick an alias with `fzf` and insert it into the command line. |
 | Neovim | Ready | NvChad-based config managed under `~/.config/nvim`. |
 | Neovim/tmux navigation | Ready | `Ctrl-h/j/k/l` moves across Neovim splits and tmux panes. |
@@ -46,9 +47,9 @@ chezmoi init --apply https://github.com/RainLib/dotfiles.git
 
 This full apply performs the macOS bootstrap declared in `.chezmoiscripts`:
 
-- installs command-line tools and terminal apps with Homebrew
+- installs command-line tools and terminal apps with Homebrew, including Starship
 - installs Oh My Zsh and zsh plugins
-- applies `~/.zshrc`, `~/.tmux.conf`, `~/.config/nvim`, terminal configs, and IdeaVim config
+- applies `~/.zshrc`, `~/.config/starship.toml`, `~/.tmux.conf`, `~/.config/nvim`, terminal configs, and IdeaVim config
 - syncs Neovim plugins
 - installs tmux plugins
 - repairs iTerm2 font settings when possible
@@ -95,7 +96,7 @@ manage it.
 Apply only shell config:
 
 ```sh
-sh scripts/apply.sh ~/.zshrc ~/.chezmoiscripts/120_setup-zsh.sh
+sh scripts/apply.sh ~/.zshrc ~/.config/starship.toml ~/.chezmoiscripts/120_setup-zsh.sh ~/.chezmoiscripts/130_setup-starship.sh
 source ~/.zshrc
 ```
 
@@ -136,6 +137,7 @@ Check zsh alias picker dependencies:
 
 ```sh
 command -v fzf
+command -v starship
 echo $ZSH
 ```
 
@@ -180,6 +182,11 @@ Oh My Zsh plus the custom plugins used by the config:
 - `zsh-users/zsh-autosuggestions`
 - `zsh-users/zsh-syntax-highlighting`
 - `Aloxaf/fzf-tab`
+
+Starship is initialized by `~/.zshrc` when the `starship` command is available.
+The prompt config is managed by [dot_config/starship.toml](dot_config/starship.toml)
+and uses Starship's gruvbox-rainbow preset. A Nerd Font must be enabled in the
+terminal for the prompt symbols to render correctly.
 
 Machine-local shell customizations can live in `~/.zshrc.local`. That file is
 loaded by `~/.zshrc` when present and is intentionally not managed by this repo.

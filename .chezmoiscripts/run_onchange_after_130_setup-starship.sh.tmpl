@@ -1,0 +1,24 @@
+{{ if or (eq .chezmoi.os "linux") (eq .chezmoi.os "darwin") -}}
+#!/bin/sh
+set -eu
+
+if [ "${STARSHIP_INSTALL_ON_APPLY:-1}" = "0" ]; then
+  echo "Skipping Starship install."
+  exit 0
+fi
+
+if command -v starship >/dev/null 2>&1; then
+  exit 0
+fi
+
+{{ if eq .chezmoi.os "darwin" -}}
+if command -v brew >/dev/null 2>&1; then
+  brew install starship
+else
+  echo "Homebrew is required to install Starship automatically." >&2
+  exit 1
+fi
+{{ else if eq .chezmoi.os "linux" -}}
+echo "Starship is not installed. Install it with your package manager or from https://starship.rs/guide/." >&2
+{{ end -}}
+{{ end -}}
