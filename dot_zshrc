@@ -9,7 +9,16 @@
 export ZSH="$HOME/.oh-my-zsh"
 export ZSH_CUSTOM="${ZSH_CUSTOM:-$ZSH/custom}"
 export GOPATH="${GOPATH:-$HOME/go}"
-export PATH="$HOME/go/bin:$PATH"
+typeset -U path
+path=(
+  "$HOME/.local/bin"
+  "$HOME/bin"
+  "$HOME/go/bin"
+  /opt/homebrew/bin
+  /usr/local/bin
+  "${path[@]}"
+)
+export PATH
 
 # Starship owns the prompt when it is installed. Keep af-magic as a fallback.
 if command -v starship >/dev/null 2>&1; then
@@ -83,30 +92,116 @@ done
 
 source $ZSH/oh-my-zsh.sh
 
+for command_name in grep egrep fgrep sed sort dig nc curl lsof ps pgrep kill; do
+  unalias "$command_name" 2>/dev/null || true
+done
+
+HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+setopt AUTO_CD
+setopt AUTO_PUSHD
+setopt PUSHD_IGNORE_DUPS
+setopt PUSHD_SILENT
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_FIND_NO_DUPS
+setopt HIST_REDUCE_BLANKS
+setopt HIST_IGNORE_SPACE
+setopt SHARE_HISTORY
+setopt INC_APPEND_HISTORY
+setopt EXTENDED_GLOB
+setopt NULL_GLOB
+setopt INTERACTIVE_COMMENTS
+
+export EDITOR="${EDITOR:-nvim}"
+export VISUAL="${VISUAL:-$EDITOR}"
+export KUBE_EDITOR="${KUBE_EDITOR:-$EDITOR}"
+export K9S_CLIPBOARD="${K9S_CLIPBOARD:-auto}"
+
 alias cx='codex -a never --sandbox workspace-write'
 alias cxd='codex --dangerously-bypass-approvals-and-sandbox'
 alias tm='tmux new -A -s main'
-alias gs='git status'
+alias g='git'
+alias gs='git status --short'
+alias gst='git status'
+alias ga='git add'
+alias gaa='git add --all'
+alias gc='git commit'
+alias gcm='git commit -m'
 alias gp='git pull --rebase'
+alias gpl='git pull --rebase --autostash'
+alias gps='git push'
+alias gb='git branch'
+alias gco='git checkout'
+alias gsw='git switch'
+alias gl='git log --oneline --graph --decorate --all'
+alias gd='git diff'
+alias gds='git diff --staged'
+alias d='docker'
+alias dc='docker compose'
 alias dcup='docker compose up -d'
+alias dps='docker ps'
+alias dimg='docker images'
+alias dlog='docker logs -f'
+alias k='kubectl'
+alias kgp='kubectl get pods'
+alias kgs='kubectl get svc'
+alias kgd='kubectl get deploy'
+alias kaf='kubectl apply -f'
+alias kdf='kubectl diff -f'
 alias kpods='kubectl get pods -A'
+alias kk='k9s'
+alias kkro='k9s --readonly'
+alias kkpo='k9s -c pod'
+alias kkdep='k9s -c deploy'
+alias kksvc='k9s -c svc'
+alias kkns='k9s -c ns'
+alias kkctx='k9s -c ctx'
+alias kksys='k9s -n kube-system'
+alias kp='killport'
+alias kn='killname'
+alias psg='psgrep'
+alias netlisten='lsof -nP -iTCP -sTCP:LISTEN'
+alias routes='netstat -rn'
+alias myip='curl -fsS https://api.ipify.org; echo'
+alias localip='ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null'
+alias flushdns='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
 alias dev='pnpm dev'
 alias mvi="mvn clean && mvn install -DskipTests=true"
 
-export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
-export PATH="$PATH:$GOPATH/bin"
+path=("$HOME/.yarn/bin" "$HOME/.config/yarn/global/node_modules/.bin" "${path[@]}" "$GOPATH/bin")
+export PATH
 
 alias v="nvim"
 alias ll="ls -la"
-export PATH="/Users/hank.zhao/Developer/git-fuzzy/bin:$PATH"
-#export JAVA_HOME=$(/usr/libexec/java_home -v 1.8)
-#export JAVA_HOME="/opt/homebrew/opt/openjdk@11"
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/zulu-8.jdk/Contents/Home
-export PATH="/opt/homebrew/opt/openjdk@11/bin:$PATH"
+if command -v eza >/dev/null 2>&1; then
+  alias ls='eza --icons=auto --group-directories-first'
+  alias ll='eza -lh --icons=auto --group-directories-first'
+  alias la='eza -lah --icons=auto --group-directories-first'
+else
+  alias la='ls -la'
+fi
+if command -v bat >/dev/null 2>&1; then
+  alias cat='bat'
+fi
+path=("/Users/hank.zhao/Developer/git-fuzzy/bin" "${path[@]}")
+export PATH
 
 alias gcf='git checkout $( git branch | fzf)'
 alias gcfr='git checkout $(git branch -r | fzf | sed "s/origin\///")'
 alias cm='chezmoi'
+
+if (( $+functions[compdef] )); then
+  compdef g=git
+  command -v kubectl >/dev/null 2>&1 && compdef k=kubectl
+  command -v docker >/dev/null 2>&1 && compdef d=docker
+  command -v docker >/dev/null 2>&1 && compdef dc=docker
+fi
+
+for name in hh jdk j17 j8 mkcd proj gclean gsw-fzf dcu dsh kctx kns klog kkc kkr kkn servehere port ports killport killname psgrep dns tcping httpstat headers cdf fh; do
+  unalias "$name" 2>/dev/null || true
+done
 
 # hh - show all loaded aliases in a readable list.
 hh() {
@@ -133,6 +228,374 @@ hh() {
     done
   } | "${pager[@]}"
 }
+
+_dotfiles_need_command() {
+  command -v "$1" >/dev/null 2>&1 || {
+    print -u2 "$1 is not installed or not on PATH"
+    return 127
+  }
+}
+
+jdk() {
+  emulate -L zsh
+  local version="${1:-${DOTFILES_JAVA_VERSION:-17}}"
+  local java_home
+
+  if [[ ! -x /usr/libexec/java_home ]]; then
+    print -u2 "/usr/libexec/java_home is not available"
+    return 127
+  fi
+
+  java_home=$(/usr/libexec/java_home -v "$version" 2>/dev/null) || {
+    print -u2 "No JDK found for version: $version"
+    /usr/libexec/java_home -V 2>&1
+    return 1
+  }
+
+  [[ -n "$JAVA_HOME" ]] && path=("${(@)path:#$JAVA_HOME/bin}")
+  export JAVA_HOME="$java_home"
+  path=("$JAVA_HOME/bin" "${path[@]}")
+  export PATH
+  java -version
+}
+
+_dotfiles_init_java() {
+  [[ -x /usr/libexec/java_home ]] || return 0
+  jdk "${DOTFILES_JAVA_VERSION:-17}" >/dev/null 2>&1 || jdk 1.8 >/dev/null 2>&1 || true
+}
+
+j17() {
+  jdk 17
+}
+
+j8() {
+  jdk 1.8
+}
+
+mkcd() {
+  if [[ $# -ne 1 ]]; then
+    print -u2 "usage: mkcd <dir>"
+    return 2
+  fi
+  mkdir -p -- "$1" && cd -- "$1"
+}
+
+proj() {
+  emulate -L zsh
+  local root="${1:-$HOME/project}"
+  local target
+
+  _dotfiles_need_command fzf || return
+  target=$(find "$root" -mindepth 1 -maxdepth 4 -type d -name .git -prune -print 2>/dev/null |
+    \sed 's#/.git$##' |
+    fzf --prompt='project> ') || return
+  cd "$target"
+}
+
+gclean() {
+  emulate -L zsh
+  local main="${1:-main}"
+  local branch
+
+  git fetch --prune
+  git branch --merged "$main" |
+    \sed 's/^[* ]*//' |
+    \grep -vE "^(${main}|master|develop)$" |
+    while read -r branch; do
+      [[ -n "$branch" ]] && git branch -d "$branch"
+    done
+}
+
+gsw-fzf() {
+  emulate -L zsh
+  local branch
+
+  _dotfiles_need_command fzf || return
+  branch=$(git branch --all --format='%(refname:short)' |
+    \sed 's#^origin/##' |
+    \sort -u |
+    fzf --prompt='branch> ') || return
+  git switch "$branch"
+}
+
+dcu() {
+  if [[ ! -f compose.yaml && ! -f docker-compose.yml ]]; then
+    print -u2 "no compose.yaml or docker-compose.yml found"
+    return 1
+  fi
+  docker compose up -d "$@"
+}
+
+dsh() {
+  emulate -L zsh
+  local container shell
+
+  _dotfiles_need_command docker || return
+  _dotfiles_need_command fzf || return
+  container=$(docker ps --format '{{.Names}}' | fzf --prompt='container> ') || return
+  for shell in bash zsh sh; do
+    if docker exec "$container" command -v "$shell" >/dev/null 2>&1; then
+      docker exec -it "$container" "$shell"
+      return
+    fi
+  done
+}
+
+kctx() {
+  emulate -L zsh
+  local ctx
+
+  _dotfiles_need_command kubectl || return
+  if [[ $# -gt 0 ]]; then
+    kubectl config use-context "$1"
+    return
+  fi
+
+  _dotfiles_need_command fzf || {
+    kubectl config current-context
+    return
+  }
+  ctx=$(kubectl config get-contexts -o name | fzf --prompt='context> ') || return
+  kubectl config use-context "$ctx"
+}
+
+kns() {
+  emulate -L zsh
+  local ns
+
+  _dotfiles_need_command kubectl || return
+  if [[ $# -gt 0 ]]; then
+    kubectl config set-context --current --namespace="$1"
+    return
+  fi
+
+  _dotfiles_need_command fzf || return
+  ns=$(kubectl get ns -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' |
+    fzf --prompt='namespace> ') || return
+  kubectl config set-context --current --namespace="$ns"
+}
+
+klog() {
+  emulate -L zsh
+  local pod
+
+  _dotfiles_need_command kubectl || return
+  _dotfiles_need_command fzf || return
+  pod=$(kubectl get pods --no-headers -o custom-columns=':metadata.name' |
+    fzf --prompt='pod> ') || return
+  kubectl logs -f "$pod" "$@"
+}
+
+kkc() {
+  emulate -L zsh
+  local ctx
+
+  _dotfiles_need_command k9s || return
+  if [[ $# -gt 0 ]]; then
+    k9s --context "$1"
+    return
+  fi
+
+  _dotfiles_need_command kubectl || return
+  _dotfiles_need_command fzf || return
+  ctx=$(kubectl config get-contexts -o name | fzf --prompt='k9s context> ') || return
+  k9s --context "$ctx"
+}
+
+kkr() {
+  emulate -L zsh
+  local ctx
+
+  _dotfiles_need_command k9s || return
+  if [[ $# -gt 0 ]]; then
+    k9s --context "$1" --readonly
+    return
+  fi
+
+  _dotfiles_need_command kubectl || return
+  _dotfiles_need_command fzf || return
+  ctx=$(kubectl config get-contexts -o name | fzf --prompt='readonly context> ') || return
+  k9s --context "$ctx" --readonly
+}
+
+kkn() {
+  if [[ $# -ne 1 ]]; then
+    print -u2 "usage: k9n <namespace>"
+    return 2
+  fi
+  k9s -n "$1"
+}
+
+servehere() {
+  local port="${1:-8000}"
+  python3 -m http.server "$port"
+}
+
+port() {
+  if [[ $# -ne 1 ]]; then
+    print -u2 "usage: port <number>"
+    return 2
+  fi
+  \lsof -nP -iTCP:"$1" -sTCP:LISTEN
+}
+
+ports() {
+  \lsof -nP -iTCP -sTCP:LISTEN
+}
+
+killport() {
+  emulate -L zsh
+  local signal="TERM"
+  local assume_yes=0
+  local port reply
+  local -a pids
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -9|--force)
+        signal="KILL"
+        shift
+        ;;
+      -y|--yes)
+        assume_yes=1
+        shift
+        ;;
+      -h|--help)
+        print "usage: killport [-9|--force] [-y|--yes] <port> [port...]"
+        return 0
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  if [[ $# -eq 0 ]]; then
+    print -u2 "usage: killport [-9|--force] [-y|--yes] <port> [port...]"
+    return 2
+  fi
+
+  for port in "$@"; do
+    if [[ "$port" != <-> ]]; then
+      print -u2 "invalid port: $port"
+      continue
+    fi
+
+    pids=(${(f)"$(\lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | \sort -u)"})
+    if (( ${#pids} == 0 )); then
+      print "No process is listening on port $port"
+      continue
+    fi
+
+    \lsof -nP -iTCP:"$port" -sTCP:LISTEN
+    if (( ! assume_yes )); then
+      print -n "Kill ${#pids} process(es) on port $port with SIG$signal? [y/N] "
+      read -r reply
+      [[ "$reply" == [Yy]* ]] || {
+        print "Skipped port $port"
+        continue
+      }
+    fi
+
+    \kill "-$signal" -- "${pids[@]}"
+  done
+}
+
+psgrep() {
+  if [[ $# -eq 0 ]]; then
+    print -u2 "usage: psgrep <pattern>"
+    return 2
+  fi
+  \ps axo pid,ppid,stat,command | \grep -i -- "$*" | \grep -v '[g]rep'
+}
+
+killname() {
+  emulate -L zsh
+  local signal="TERM"
+  local assume_yes=0
+  local pattern reply
+  local -a pids
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -9|--force)
+        signal="KILL"
+        shift
+        ;;
+      -y|--yes)
+        assume_yes=1
+        shift
+        ;;
+      -h|--help)
+        print "usage: killname [-9|--force] [-y|--yes] <pattern>"
+        return 0
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+
+  if [[ $# -eq 0 ]]; then
+    print -u2 "usage: killname [-9|--force] [-y|--yes] <pattern>"
+    return 2
+  fi
+
+  pattern="$*"
+  pids=(${(f)"$(\pgrep -if -- "$pattern" 2>/dev/null | \sort -u)"})
+  pids=("${(@)pids:#$$}")
+
+  if (( ${#pids} == 0 )); then
+    print "No process matched: $pattern"
+    return 1
+  fi
+
+  \ps -p "${(j:,:)pids}" -o pid,ppid,stat,command
+  if (( ! assume_yes )); then
+    print -n "Kill ${#pids} matched process(es) with SIG$signal? [y/N] "
+    read -r reply
+    [[ "$reply" == [Yy]* ]] || {
+      print "Skipped"
+      return 1
+    }
+  fi
+
+  \kill "-$signal" -- "${pids[@]}"
+}
+
+dns() {
+  if [[ $# -eq 0 ]]; then
+    print -u2 "usage: dns <domain> [record-type]"
+    return 2
+  fi
+  \dig +short "$1" "${2:-A}"
+}
+
+tcping() {
+  if [[ $# -ne 2 ]]; then
+    print -u2 "usage: tcping <host> <port>"
+    return 2
+  fi
+  \nc -vz -G 3 "$1" "$2"
+}
+
+headers() {
+  if [[ $# -eq 0 ]]; then
+    print -u2 "usage: headers <url>"
+    return 2
+  fi
+  \curl -I "$@"
+}
+
+httpstat() {
+  if [[ $# -eq 0 ]]; then
+    print -u2 "usage: httpstat <url>"
+    return 2
+  fi
+  \curl -o /dev/null -sS -w $'status: %{http_code}\ndns: %{time_namelookup}s\nconnect: %{time_connect}s\ntls: %{time_appconnect}s\nfirst_byte: %{time_starttransfer}s\ntotal: %{time_total}s\n' "$@"
+}
+
+_dotfiles_init_java
 
 [ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
 
@@ -175,11 +638,16 @@ if [[ -o interactive ]]; then
   done
 fi
 
-# fd - cd to selected directory
-fd() {
+# cdf - cd to selected directory
+cdf() {
   local dir
-  dir=$(find ${1:-.} -path '*/\.*' -prune \
-                  -o -type d -print 2> /dev/null | fzf +m) &&
+  if command -v fd >/dev/null 2>&1; then
+    dir=$(command fd -H -t d . "${1:-.}" --max-depth 8 | fzf +m)
+  else
+    dir=$(find ${1:-.} -path '*/\.*' -prune \
+                    -o -type d -print 2> /dev/null | fzf +m)
+  fi
+  [[ -n "$dir" ]] &&
   cd "$dir"
 }
 
@@ -192,6 +660,14 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 export GOOGLE_CLOUD_PROJECT="zeusjavacom"
+
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init zsh)"
+fi
+
+if command -v direnv >/dev/null 2>&1; then
+  eval "$(direnv hook zsh)"
+fi
 
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"

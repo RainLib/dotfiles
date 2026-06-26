@@ -11,7 +11,7 @@ and `dot_config/nvim` becomes `~/.config/nvim`.
 | Area | Status | Notes |
 | --- | --- | --- |
 | chezmoi source management | Ready | `scripts/apply.sh` makes the current checkout the active chezmoi source. |
-| macOS dependency install | Ready | Installs zsh, Starship, Neovim, tmux, fzf, ripgrep, fd, Nerd Fonts, iTerm2, WezTerm, Kitty, and related CLI tools. |
+| macOS dependency install | Ready | Installs zsh, Starship, Neovim, tmux, fzf, ripgrep, fd, kubectl, k9s, helm, jq, yq, eza, bat, zoxide, Nerd Fonts, iTerm2, WezTerm, Kitty, and related CLI tools. |
 | Zsh shell | Ready | Uses Oh My Zsh with `git`, `z`, `vi-mode`, `fzf-tab`, `zsh-autosuggestions`, and `zsh-syntax-highlighting`. |
 | Starship prompt | Ready | Managed through `~/.config/starship.toml` with the gruvbox-rainbow preset. |
 | Zsh alias picker | Ready | Press `Ctrl-x` then `a` to pick an alias with `fzf` and insert it into the command line. |
@@ -199,17 +199,58 @@ Useful aliases and functions:
 | `ll` | Run `ls -la`. |
 | `cm` | Run `chezmoi`. |
 | `hh` | Show all loaded aliases and their commands. |
+| `cdf` | Pick a directory with `fzf` and `cd` into it. |
+| `proj` | Pick a git project under `~/project` and `cd` into it. |
+| `mkcd` | Create a directory and enter it. |
+| `servehere` | Serve the current directory with Python HTTP server. |
+| `port` | Show the process listening on a TCP port. |
+| `ports` | Show all listening TCP ports. |
+| `killport` / `kp` | Kill process listening on one or more ports. |
+| `killname` / `kn` | Kill processes matched by name or command line. |
+| `psgrep` / `psg` | Search running processes by pattern. |
+| `dns` | Resolve a domain with `dig +short`. |
+| `tcping` | Test TCP connectivity with `nc`. |
+| `headers` | Fetch HTTP response headers with `curl -I`. |
+| `httpstat` | Show HTTP status and timing metrics. |
+| `myip` | Print public IP address. |
+| `localip` | Print local Wi-Fi/Ethernet IP address on macOS. |
+| `routes` | Show routing table. |
 | `cx` | Start Codex with approval disabled and workspace-write sandbox. |
 | `cxd` | Start Codex with sandbox and approval bypassed. |
 | `tm` | Attach to or create the `main` tmux session. |
 | `gs` | Run `git status`. |
 | `gp` | Run `git pull --rebase`. |
+| `gpl` | Run `git pull --rebase --autostash`. |
+| `gps` | Run `git push`. |
+| `gl` | Show compact decorated git log graph. |
+| `gd` | Show unstaged git diff. |
+| `gds` | Show staged git diff. |
+| `gsw-fzf` | Pick a git branch with `fzf` and switch to it. |
+| `gclean` | Delete local branches already merged into main. |
+| `dc` | Run `docker compose`. |
 | `dcup` | Run `docker compose up -d`. |
+| `dsh` | Pick a running Docker container and open a shell. |
+| `k` | Run `kubectl`. |
 | `kpods` | Run `kubectl get pods -A`. |
+| `kctx` | Pick or set the current Kubernetes context. |
+| `kns` | Pick or set the current Kubernetes namespace. |
+| `klog` | Pick a pod and follow its logs. |
+| `kk` | Run `k9s`. |
+| `kkro` | Run `k9s --readonly`. |
+| `kkpo` | Open the K9s Pod view. |
+| `kkdep` | Open the K9s Deployment view. |
+| `kksvc` | Open the K9s Service view. |
+| `kkns` | Open the K9s Namespace view. |
+| `kkctx` | Open the K9s Context view. |
+| `kksys` | Open K9s in `kube-system`. |
+| `kkc` | Pick or open a K9s context. |
+| `kkr` | Pick or open a K9s context in read-only mode. |
+| `kkn` | Open K9s in a namespace. |
+| `j17` / `j8` | Switch `JAVA_HOME` to JDK 17 or JDK 8. |
+| `jdk` | Switch `JAVA_HOME` to a requested version. |
 | `dev` | Run `pnpm dev`. |
 | `gcf` | Pick a local git branch with `fzf` and check it out. |
 | `gcfr` | Pick a remote git branch with `fzf` and check it out locally. |
-| `fd` | Pick a directory with `fzf` and `cd` into it. |
 | `fh` | Pick a command from shell history and run it. |
 
 Alias picker:

@@ -2,7 +2,7 @@
 #!/bin/sh
 set -eu
 
-echo "Linux detected. Install git, neovim, ripgrep, fd, tree-sitter-cli, tmux, and starship with your package manager."
+echo "Linux detected. Install git, neovim, ripgrep, fd, tree-sitter-cli, tmux, starship, kubectl, k9s, helm, jq, yq, eza, bat, zoxide, and direnv with your package manager."
 {{ else if eq .chezmoi.os "darwin" -}}
 #!/bin/sh
 set -eu
@@ -43,6 +43,16 @@ install_or_upgrade_formula tree-sitter-cli
 install_or_upgrade_formula tmux
 install_or_upgrade_formula stylua
 install_or_upgrade_formula starship
+install_or_upgrade_formula kubernetes-cli
+install_or_upgrade_formula k9s
+install_or_upgrade_formula helm
+install_or_upgrade_formula stern
+install_or_upgrade_formula jq
+install_or_upgrade_formula yq
+install_or_upgrade_formula eza
+install_or_upgrade_formula bat
+install_or_upgrade_formula zoxide
+install_or_upgrade_formula direnv
 
 install_or_upgrade_cask font-jetbrains-mono
 install_or_upgrade_cask font-hack-nerd-font
